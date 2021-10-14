@@ -1,21 +1,24 @@
+
 # UplearnTest
 
-**TODO: Add description**
+  
 
-## Installation
+Write a function fetch(url) that fetches the page corresponding to the url and returns an object
+that has the following attributes:
+- assets - an array of urls present in the <img> tags on the page
+- links - an array of urls present in the <a> tags on the page
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `uplearn_test` to your list of dependencies in `mix.exs`:
+  
 
-```elixir
-def deps do
-  [
-    {:uplearn_test, "~> 0.1.0"}
-  ]
-end
+## How use
+
+```bash
+mix deps.get
+mix deps.compile
+mix test
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/uplearn_test](https://hexdocs.pm/uplearn_test).
-
+  
+## Dependencies
+* [Floki](https://hexdocs.pm/floki/Floki.html) - Used as HTTP Parser
+* [Tesla](https://hexdocs.pm/tesla/readme.html) - Used to HTTP Consumption
