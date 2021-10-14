@@ -1,10 +1,12 @@
 defmodule WebScraperTest do
 
-  use ExUnit.Case
 
+  alias Floki
   alias Services.WebScraper
 
   import Tesla.Mock
+
+  use ExUnit.Case
 
   @valid_url "http://example.com/hello"
   @valid_html """
@@ -50,6 +52,38 @@ defmodule WebScraperTest do
 
     test "should return :error when url is invalid" do
       assert :error == WebScraper.valid_url?(@invalid_url)
+    end
+  end
+
+  describe "get_links_from_tag_a/1" do
+    test "should return correct links from <a> href" do
+      {:ok, links} = WebScraper.get_links_from_tag_a(@valid_html)
+      assert links == ["www.google.com", "facebook.com", "linkedin.com"]
+    end
+  end
+
+  describe "get_links_from_tag_img/1" do
+    test "should return correct links from <img> src" do
+      {:ok, links} = WebScraper.get_links_from_tag_img(@valid_html)
+
+      assert links == [
+               "https://elixir-lang.org/images/logo/logo.png",
+               "https://miro.medium.com/max/2000/1*WvDl2WlPs7cR8TTBvrjpyw.png"
+             ]
+    end
+  end
+
+  describe "fetch/1" do
+    test "should return corret map of assets and links when receives a valid url" do
+      {:ok, resources} = WebScraper.fetch(@valid_url)
+
+      assert resources == %{
+        assets: ["www.google.com", "facebook.com", "linkedin.com"],
+        links: [
+          "https://elixir-lang.org/images/logo/logo.png",
+          "https://miro.medium.com/max/2000/1*WvDl2WlPs7cR8TTBvrjpyw.png"
+        ]
+      }
     end
   end
 
