@@ -1,6 +1,4 @@
 defmodule WebScraperTest do
-
-
   alias Floki
   alias Services.WebScraper
 
@@ -8,7 +6,10 @@ defmodule WebScraperTest do
 
   use ExUnit.Case
 
-  @valid_url "http://example.com/hello"
+  @url_with_no_tags "http://no-tags-here.com"
+  @valid_url "http://example.com/"
+  @invalid_url "this not is an html"
+  @invalid_url_domain "http://this-just-is-a-failed-example.com"
   @valid_html """
   <html>
     <title>
@@ -24,53 +25,40 @@ defmodule WebScraperTest do
         <img src="https://miro.medium.com/max/2000/1*WvDl2WlPs7cR8TTBvrjpyw.png">
     </body>
   </html>
-"""
-  @invalid_html "invalid_html"
+  """
+  @html_with_no_tags """
+  <!DOCTYPE html>
+  <html>
+    <head>
+        <meta charset='utf-8'>
+        <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+        <title>Page Title</title>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+        <script src='main.js'></script>
+    </head>
+    <body>
+        <p>Hello World</p>
+        <h1>Any title</h1>
+        <button>Click me</button>
+
+    </body>
+  </html>
+  """
 
   setup do
     mock(fn
-      %{method: :get, url: "http://example.com/"} ->
+      %{method: :get, url: @valid_url} ->
         %Tesla.Env{status: 200, body: @valid_html}
 
+      %{method: :get, url: @invalid_url_domain} ->
+        {:error, :nxdomain}
+
+      %{method: :get, url: @url_with_no_tags} ->
+        %Tesla.Env{status: 200, body: @html_with_no_tags}
     end)
 
     :ok
-  end
-
-  describe "get_content_by_url/1" do
-    test "should return :ok status code and his html" do
-      assert {:ok, %Tesla.Env{} = env} = WebScraper.get_content_by_url(@valid_url)
-      assert env.status == 200
-      assert env.body == @valid_html
-    end
-  end
-
-  describe "valid_url?/1" do
-    test "should return :ok when url is valid" do
-      assert :ok == WebScraper.valid_url?(@valid_url)
-    end
-
-    test "should return :error when url is invalid" do
-      assert :error == WebScraper.valid_url?(@invalid_url)
-    end
-  end
-
-  describe "get_links_from_tag_a/1" do
-    test "should return correct links from <a> href" do
-      {:ok, links} = WebScraper.get_links_from_tag_a(@valid_html)
-      assert links == ["www.google.com", "facebook.com", "linkedin.com"]
-    end
-  end
-
-  describe "get_links_from_tag_img/1" do
-    test "should return correct links from <img> src" do
-      {:ok, links} = WebScraper.get_links_from_tag_img(@valid_html)
-
-      assert links == [
-               "https://elixir-lang.org/images/logo/logo.png",
-               "https://miro.medium.com/max/2000/1*WvDl2WlPs7cR8TTBvrjpyw.png"
-             ]
-    end
   end
 
   describe "fetch/1" do
@@ -78,13 +66,28 @@ defmodule WebScraperTest do
       {:ok, resources} = WebScraper.fetch(@valid_url)
 
       assert resources == %{
-        assets: ["www.google.com", "facebook.com", "linkedin.com"],
-        links: [
-          "https://elixir-lang.org/images/logo/logo.png",
-          "https://miro.medium.com/max/2000/1*WvDl2WlPs7cR8TTBvrjpyw.png"
-        ]
-      }
+               assets: [
+                 "https://elixir-lang.org/images/logo/logo.png",
+                 "https://miro.medium.com/max/2000/1*WvDl2WlPs7cR8TTBvrjpyw.png"
+               ],
+               links: ["www.google.com", "facebook.com", "linkedin.com"]
+             }
+    end
+
+    test "should return an :invalid_url when the url was invalid" do
+      assert {:error, :invalid_url} == WebScraper.fetch(@invalid_url)
+    end
+
+    test "should return an error when domain is invalid" do
+      assert {:error, :nxdomain} == WebScraper.fetch(@invalid_url_domain)
+    end
+
+    test "should return a empty array when does not exists <a> or <img> tags" do
+      assert {:ok,
+              %{
+                assets: [],
+                links: []
+              }} == WebScraper.fetch(@url_with_no_tags)
     end
   end
-
 end
