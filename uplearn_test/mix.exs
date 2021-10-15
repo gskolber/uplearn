@@ -23,7 +23,9 @@ defmodule UplearnTest.MixProject do
     [
       {:tesla, "~> 1.4"},
       {:hackney, "~> 1.17"},
-      {:jason, ">= 1.0.0"}
+      {:jason, ">= 1.0.0"},
+      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
+      {:floki, "~> 0.31.0"}
     ]
   end
 end
